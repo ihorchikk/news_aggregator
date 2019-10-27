@@ -2,7 +2,19 @@ version: '3.2'
 
 services:
 
-  news_aggregator_app: &app
+  nginx:
+    build: ./nginx
+    restart: always
+    depends_on:
+      - app
+    ports:
+      - 8011:8011
+    expose:
+      - "8011"
+    networks:
+      - nginx-network
+
+  app:
     tty: true
     build:
       context: .
@@ -14,6 +26,7 @@ services:
       - DEBUG=True
       - SETTINGS_FILE=api.dev.yml
       - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
     restart: always
     volumes:
       - .:/app:delegated
@@ -21,9 +34,12 @@ services:
       - postgres
       - redis
     ports:
-      - 8080:8080
-      - 8081:8081
-    command: make adev
+      - 8010:8010
+    entrypoint: "gunicorn news_aggregator.app:app -b 0.0.0.0:8010 --worker-class aiohttp.GunicornUVLoopWebWorker"
+    networks:
+      - nginx-network
+      - redis-network
+      - postgres-network
 
   postgres:
       image: postgres:10
@@ -34,15 +50,21 @@ services:
           - POSTGRES_DB=postgres
       ports:
           - 5432
+      networks:
+        - postgres-network
 
   redis:
     image: redis:4
     ports:
         - 6379
+    networks:
+      - redis-network
 
-  test:
-    <<: *app
-    container_name: news_aggregator_test
-    ports:
-      - 8082:8082
-    command: make _test
+
+networks:
+    redis-network:
+      driver: bridge
+    postgres-network:
+      driver: bridge
+    nginx-network:
+      driver: bridge

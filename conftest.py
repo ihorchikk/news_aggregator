@@ -5,7 +5,7 @@ import aiopg.sa
 from news_aggregator.utils.common import PATH, get_config
 from news_aggregator.app import init_app
 from news_aggregator.migrations import metadata
-from news_aggregator.users.tables import users
+from news_aggregator.db.tables import users
 
 
 # constants

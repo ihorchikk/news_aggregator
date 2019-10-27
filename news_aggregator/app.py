@@ -7,6 +7,11 @@ import aiopg.sa
 from aiohttp import web
 import aioredis
 import jinja2
+from aiohttp_security import setup as setup_security, SessionIdentityPolicy
+from aiohttp_session import setup as setup_session
+from aiohttp_session.redis_storage import RedisStorage
+from aiopg.sa import create_engine
+from aioredis import create_pool
 
 from news_aggregator.routes import init_routes
 from news_aggregator.utils.common import init_config
@@ -16,57 +21,53 @@ path = Path(__file__).parent
 
 
 def init_jinja2(app: web.Application) -> None:
-    '''
-    Initialize jinja2 template for application.
-    '''
+    """ Initialize jinja2 template for application.
+
+    :param app:
+    :return:
+    """
     aiohttp_jinja2.setup(
         app,
         loader=jinja2.FileSystemLoader(str(path / 'templates'))
     )
 
-
 async def database(app: web.Application) -> None:
-    '''
-    A function that, when the server is started, connects to postgresql,
+    """ A function that, when the server is started, connects to postgresql,
     and after stopping it breaks the connection (after yield)
-    '''
+
+    :param app:
+    :return:
+    """
     config = app['config']['postgres']
 
     engine = await aiopg.sa.create_engine(**config)
-    app['db'] = engine
+    app['postgres'] = engine
 
     yield
 
-    app['db'].close()
-    await app['db'].wait_closed()
+    app['postgres'].close()
+    await app['postgres'].wait_closed()
 
 
 async def redis(app: web.Application) -> None:
-    '''
-    A function that, when the server is started, connects to redis,
+    """A function that, when the server is started, connects to redis,
     and after stopping it breaks the connection (after yield)
-    '''
+
+    :param app:
+    :return:
+    """
     config = app['config']['redis']
 
     create_redis = partial(
         aioredis.create_redis,
         f'redis://{config["host"]}:{config["port"]}'
     )
-
-    sub = await create_redis()
-    pub = await create_redis()
-
-    app['redis_sub'] = sub
-    app['redis_pub'] = pub
-    app['create_redis'] = create_redis
+    app['create_redis'] = await create_redis()
 
     yield
 
-    app['redis_sub'].close()
-    app['redis_pub'].close()
-
-    await app['redis_sub'].wait_closed()
-    await app['redis_pub'].wait_closed()
+    app['create_redis'].close()
+    await app['create_redis'].wait_closed()
 
 
 def init_app(config: Optional[List[str]] = None) -> web.Application:
@@ -82,3 +83,6 @@ def init_app(config: Optional[List[str]] = None) -> web.Application:
     ])
 
     return app
+
+
+app = init_app()
