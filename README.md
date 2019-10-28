@@ -10,7 +10,6 @@ ___
 ## Features
 
 - aiohttp
-- mypy
 - pytest
 - flake8
 - trafaret
@@ -64,13 +63,6 @@ To upgrade dependencies:
 make upgrade
 ```
 
-### Help
-
-If needed a list of available commands
-```
-make help
-```
-
 ### Docs
 
 For generate sphinx docs
@@ -87,20 +79,8 @@ make lint
 
 The all settings connected with a `flake8` you can customize in `.flake8`.
 
-### Type checking
-To run mypy for type checking run the following command:
-
-```
-make mypy
-```
-
-The all settings connected with a `mypy` you can customize in `mypy.ini`.
 ___
 
-### Testing
-```
-make test
-```
 
 ### Database
 Management of database (postgres) migrations takes place with the help of [alembic](http://alembic.zzzcomputing.com/en/latest/).
@@ -117,37 +97,11 @@ Apply migrations:
 make migrate # the command must be running after `make run` 
 ```
 
-If u wanna create new file with tables u should import tables to `news_aggregator/migrations/env.py`
-
-```
-import news_aggregator.users.tables # import new files here
-```
-
-If u need to make downgrade or other special things with alembic, use `make bash`
-for penetration inside the container and run native alembic's commands.
-
-```
-make bash
-alembic downgrade -1
-```
-
 To connect to postgres, use the command below
 
 ```
 make psql # the command must be running after `make run` 
 ```
-
-## Production
-All production settings for application are in the `/config/api.prod.yml`.
-
-The production and develop containers have a little bit different and all that different describe in docker-compose.production.yml. This  is works with the command bellow:
-
-```
-make production
-```
-
-for more information [docs](https://docs.docker.com/compose/reference/overview/).
-___
 
 ## Software
 
