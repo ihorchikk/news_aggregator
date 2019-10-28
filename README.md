@@ -1,4 +1,4 @@
-# news_aggregator
+# News aggregator
 
 ___
 
